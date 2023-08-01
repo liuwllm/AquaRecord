@@ -3,23 +3,26 @@ const session = require('express-session');
 const mysql = require('mysql2');
 const MySQLStore = require('express-mysql-session')(session);
 const bcrypt = require('bcrypt');
+const fs = require('fs');
 
 // Sets up a connection to AquaRecord database to store sessions
 const cookieStore = new MySQLStore({
-    host: "localhost",
-    port: "5000",
-    user: "root",
+    host: "aquarecordserver.mysql.database.azure.com",
+    port: "3306",
+    user: "azureuser",
     database: "AquaRecord",
-    password: "StayHydrated" // maybe use a better password idk
+    password: 'StayHydrated!H20',
+    ssl: {ca: fs.readFileSync("./DigiCertGlobalRootCA.crt.pem")}
 });
 
 // Sets up a connection to AquaRecord to store user data
 const aquaRecordDB = mysql.createConnection({
-    host: "localhost",
-    user: "root",
+    host: "aquarecordserver.mysql.database.azure.com",
+    user: "azureuser",
     database: "AquaRecord",
-    password: "StayHydrated",
+    password: 'StayHydrated!H20',
     multipleStatements: true,  
+    ssl: {ca: fs.readFileSync("./DigiCertGlobalRootCA.crt.pem")}
 });
 
 // Function for verifying the login credentials of the user
@@ -31,9 +34,7 @@ const verifyUser = (username, pwd, done) => {
 
         if (results.length == 0)
             return done(null, false, { message: "No user with that username." });
-        console.log("Before Try catch");
         try {
-            console.log("In try catch");
             if (await bcrypt.compare(pwd, results[0].Password)) {
                 const user = {
                     id: results[0].id,
@@ -47,7 +48,6 @@ const verifyUser = (username, pwd, done) => {
                 return done(null, false, { message: "Your password is incorrect" });
             }
         } catch(e) {
-            console.log("Error occurs");
             return done(e);
         }
     })
