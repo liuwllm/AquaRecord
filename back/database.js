@@ -8,17 +8,17 @@ require('dotenv').config();
 
 // Sets up a connection to AquaRecord database to store sessions
 const cookieStore = new MySQLStore({
-    host: "aquarecordserver.mysql.database.azure.com",
+    host: `${process.env.HOST}`,
     port: 3306,
-    user: "azureuser",
+    user: `${process.env.SERVERUSER}`,
     database: "AquaRecord",
     password: `${process.env.PASSWORD}`,
 });
 
 // Sets up a connection to AquaRecord to store user data
 const aquaRecordDB = mysql.createConnection({
-    host: "aquarecordserver.mysql.database.azure.com",
-    user: "azureuser",
+    host: `${process.env.HOST}`,
+    user: `${process.env.SERVERUSER}`,
     port: 3306,
     database: "AquaRecord",
     password: `${process.env.PASSWORD}`,
