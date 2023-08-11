@@ -1,6 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginUser } from '../UserFunctions';
+import axios from 'axios';
+
+
+const BASE_URL = 'http://localhost:5000/api';
+
+const API_ENDPOINTS = {
+    login: '/login',
+    register: '/register',
+};
+
+const api = axios.create({
+    baseURL: BASE_URL,
+});
 
 const LoginForm: React.FC = () => {
     const nav = useNavigate();
@@ -8,14 +20,13 @@ const LoginForm: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        
-        try {
-            const { user } = await loginUser({ user: credentials });
-            console.log("Logged in user:", user);
-            nav('/user-info', {state: user});
-        } catch (e) {
-            console.error("Error while logging in:", e);
-            alert('Invalid credentials')
+
+        const login_res = await axios.post("http://localhost:5000/api/login", credentials, {withCredentials: true});
+        if (login_res.data.authenticated) {
+            const res = await axios.get("http://localhost:5000/api/user-info", {withCredentials: true});
+            nav('/user-info', {state: res.data});
+        } else {
+            alert(login_res.data.message);
         }
     };
 
