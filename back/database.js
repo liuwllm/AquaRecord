@@ -10,7 +10,7 @@ require('dotenv').config();
 const cookieStore = new MySQLStore({
     host: `${process.env.HOST}`,
     port: 3306,
-    user: `${process.env.SERVERUSER}`,
+    user: `${process.env.SERVERUSER }`,
     database: "AquaRecord",
     password: `${process.env.PASSWORD}`,
 });
@@ -96,14 +96,57 @@ const deserializeUser = (userId, done) => {
     });
 }
 
-const setCupTracker = (cupCount, userId) => {
-    console.log("Setting cup count to: ", cupCount);
-    aquaRecordDB.query(`UPDATE Users SET CupsDrank = ${cupCount} WHERE id = ${userId}`, function(err, result) {
-        if (err) {
-            console.log("Error occured while setting cup count");
-            console.log(err);
+// Function to add/update the water intake amount for the day in the AquaRecord database
+const logIntake = (userId, date, cups) => {
+    console.log(`Logging ${cups} cups drank by user with id ${userId} on ${date}`);
+
+    // Check if an entry for water intake already exists for the user on the given date (UserId and Date form a composite candidate key)
+    aquaRecordDB.query(`SELECT * FROM WaterIntake WHERE UserId=${userId} AND Date='${date}'`, 
+        function(error, results) {
+            if (error) {
+                console.log("Error occured while logging intake");
+                console.log(error);
+            } else if (results.length === 0) {
+                // if there isn't an entry then create a new entry
+                console.log(`Creating new entry for user with id ${userId} on ${date}`);
+                aquaRecordDB.query(`INSERT WaterIntake (UserId, Date, IntakeAmount) VALUES (${userId}, '${date}', ${cups})`,
+                    function(err, res) {
+                        if (err) {
+                            console.log("Error occured while inserting new entry");
+                            console.log(err);
+                        } else {
+                            console.log("Insert Successful");
+                        }
+                    }
+                );
+            } else { // if there is an entry, then that means the user clicked the button to update IntakeAmount
+                console.log(`Updating entry for user with id ${userId} on ${date}`);
+                aquaRecordDB.query(`UPDATE WaterIntake SET IntakeAmount=${cups} WHERE UserId=${userId} AND Date='${date}'`,
+                    function(err, res) {
+                        if (err) {
+                            console.log("Error occured while updating intake");
+                            console.log(err);
+                        } else {
+                            console.log("Update Successful");
+                        }
+                    }
+                );
+            }
+            
         }
-    });
+    );
 }
 
-module.exports = { cookieStore, verifyUser, registerUser, deserializeUser, setCupTracker};
+// Function to retrieve the water intake from the database
+const getIntake = async (userId, date) => {
+    console.log("Retrieving water intake info...");
+    const result = await aquaRecordDB.promise().query(`SELECT * FROM WaterIntake WHERE UserId=${userId} AND Date='${date}'`);    
+    
+    if (result[0].length === 0) {
+        return 0;
+    } else {
+        return result[0][0].IntakeAmount;
+    }
+}
+
+module.exports = { cookieStore, verifyUser, registerUser, deserializeUser, logIntake, getIntake };

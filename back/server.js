@@ -7,6 +7,7 @@ const passport = require('passport');
 const session = require('express-session');
 const LocalStrategy = require('passport-local').Strategy;
 
+const date = require('moment');
 const aquaRecord = require('./database.js');
 
 // Define Middleware
@@ -52,6 +53,8 @@ passport.serializeUser((user, done) => {
     done(null, user.id);
 });
 passport.deserializeUser(aquaRecord.deserializeUser);
+
+
 
 // API
 
@@ -101,10 +104,28 @@ app.post("/api/logout", (req, res, next) => {
     });
 });
 
-app.post("/api/cup-tracker", (req, res) => {
-    aquaRecord.setCupTracker(req.body.cupCount, req.user.id);
-    res.end();
+app.post("/api/daily_intake/post", (req, res) => {
+    const userId = req.user.id;
+    const cur_date = date().format('YYYY-MM-DD HH:mm:ss').slice(0,10);
+    const intake = req.body.cups;
+
+    aquaRecord.logIntake(userId, cur_date, intake);
+
+    res.status(200);
 });
+
+app.get("/api/daily_intake/get", async (req, res) => {
+    const userId = req.user.id;
+    const cur_date = date().format('YYYY-MM-DD HH:mm:ss').slice(0,10);
+    
+    const result = await aquaRecord.getIntake(userId, cur_date);
+    if (result === false) {
+        res.send("Failed to retrieve intake info");
+    } else {
+        res.send({cupCount: result});
+    }
+    
+})
 
 app.listen(5000, () => {
     console.log("App listening on port 5000");
