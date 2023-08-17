@@ -1,0 +1,18 @@
+button {
+    position: relative;
+}
+
+.text {
+    margin-top: 2px;
+    margin-bottom: 7px;
+}
+
+.water {
+    transition: clip-path 0.5s ease-in-out; /* "animation" when water level rises */
+}
+.cup {
+    position: absolute;
+    left: 8%;
+    top: 15%;
+}
+

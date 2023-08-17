@@ -104,14 +104,14 @@ app.post("/api/logout", (req, res, next) => {
     });
 });
 
-app.post("/api/daily_intake/post", (req, res) => {
+app.post("/api/daily_intake/post", async (req, res) => {
     const userId = req.user.id;
     const cur_date = date().format('YYYY-MM-DD HH:mm:ss').slice(0,10);
     const intake = req.body.cups;
 
-    aquaRecord.logIntake(userId, cur_date, intake);
+    await aquaRecord.logIntake(userId, cur_date, intake);
 
-    res.status(200);
+    res.status(200).send("Complete");
 });
 
 app.get("/api/daily_intake/get", async (req, res) => {
